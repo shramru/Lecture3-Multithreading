@@ -4,7 +4,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +28,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         text = (TextView) findViewById(R.id.text);
 
+        text.setText("Click me");
+
+        text.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadFromUrl();
+            }
+        });
+    }
+
+    private void loadFromUrl() {
+        text.setText("Loading...");
+
         new Thread() {
             @Override
             public void run() {
@@ -35,17 +51,29 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                     return;
                 }
+
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        text.setText(stringFromUrl);
+                        onTextLoaded(stringFromUrl);
                     }
                 });
             }
         }.start();
     }
 
+    private void onTextLoaded(final String stringFromUrl) {
+        Toast.makeText(MainActivity.this, stringFromUrl, Toast.LENGTH_SHORT).show();
+        text.setText(stringFromUrl);
+    }
+
     private String readStringFromUrl(String url) throws IOException {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         StringBuilder result = new StringBuilder();
 
         URL oracle = new URL(url);
