@@ -1,5 +1,7 @@
 package ru.mail.park.lesson3;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -13,6 +15,8 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
     private TextView text;
 
     @Override
@@ -24,14 +28,19 @@ public class MainActivity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
-                String stringFromUrl;
+                final String stringFromUrl;
                 try {
                     stringFromUrl = readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
                 } catch (IOException e) {
                     e.printStackTrace();
                     return;
                 }
-                text.setText(stringFromUrl);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        text.setText(stringFromUrl);
+                    }
+                });
             }
         }.start();
     }
