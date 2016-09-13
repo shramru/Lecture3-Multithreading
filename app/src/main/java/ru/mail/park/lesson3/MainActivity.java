@@ -21,14 +21,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         text = (TextView) findViewById(R.id.text);
 
-        String text;
-        try {
-            text = readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        this.text.setText(text);
+        new Thread() {
+            @Override
+            public void run() {
+                String stringFromUrl;
+                try {
+                    stringFromUrl = readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                text.setText(stringFromUrl);
+            }
+        }.start();
     }
 
     private String readStringFromUrl(String url) throws IOException {
