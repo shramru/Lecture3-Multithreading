@@ -1,26 +1,14 @@
 package ru.mail.park.lesson3;
 
-import android.app.LoaderManager;
-import android.content.AsyncTaskLoader;
-import android.content.Context;
 import android.content.Loader;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-
 public class MainActivity extends AppCompatActivity {
-
-    private static final int LOADER_ID = 1;
 
     static {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
@@ -32,8 +20,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private TextView text;
-
-    private Loader<String> loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,27 +36,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        loader = getLoaderManager().initLoader(LOADER_ID, null,
-                new LoaderManager.LoaderCallbacks<String>() {
+        UrlDownloader.getInstance().setCallback(new UrlDownloader.Callback() {
             @Override
-            public Loader<String> onCreateLoader(int id, final Bundle args) {
-                return new UrlTaskLoader(MainActivity.this);
-            }
-
-            @Override
-            public void onLoadFinished(Loader<String> loader, String data) {
-                onTextLoaded(data);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<String> loader) {
-                Log.d("MainActivity", "OnLoaderReset");
+            public void onLoaded(String value) {
+                onTextLoaded(value);
             }
         });
     }
 
     private void loadFromUrl() {
-        loader.forceLoad();
+        text.setText("Loading...");
+        UrlDownloader.getInstance().load();
     }
 
     private void onTextLoaded(String stringFromUrl) {
@@ -79,49 +55,5 @@ public class MainActivity extends AppCompatActivity {
         }
         Toast.makeText(MainActivity.this, stringFromUrl, Toast.LENGTH_SHORT).show();
         text.setText(stringFromUrl);
-    }
-
-    private static String readStringFromUrl(String url) throws IOException {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        StringBuilder result = new StringBuilder();
-
-        URL oracle = new URL(url);
-        InputStream in = oracle.openStream();
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-
-            for (;;) {
-                String inputLine = bufferedReader.readLine();
-                if (inputLine == null) {
-                    break;
-                }
-
-                result.append(inputLine).append('\n');
-            }
-        } finally {
-            in.close();
-        }
-
-        return result.toString();
-    }
-
-    private static class UrlTaskLoader extends AsyncTaskLoader<String> {
-        public UrlTaskLoader(Context context) {
-            super(context);
-        }
-
-        @Override
-        public String loadInBackground() {
-            try {
-                return readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
-            } catch (IOException e) {
-                return null;
-            }
-        }
     }
 }
