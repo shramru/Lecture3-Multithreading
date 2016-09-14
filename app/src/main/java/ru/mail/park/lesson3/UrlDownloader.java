@@ -20,6 +20,8 @@ public class UrlDownloader {
         void onLoaded(String value);
     }
 
+    private String cachedResult;
+
     private Callback callback;
 
     public void setCallback(Callback callback) {
@@ -27,6 +29,11 @@ public class UrlDownloader {
     }
 
     public void load() {
+        if (cachedResult != null) {
+            callback.onLoaded(cachedResult);
+            return;
+        }
+
         new AsyncTask<String, Void, String>() {
             @Override
             protected String doInBackground(String... params) {
@@ -39,6 +46,7 @@ public class UrlDownloader {
 
             @Override
             protected void onPostExecute(String content) {
+                cachedResult = content;
                 if (callback != null) {
                     callback.onLoaded(content);
                 }
