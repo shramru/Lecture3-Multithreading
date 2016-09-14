@@ -1,9 +1,12 @@
 package ru.mail.park.lesson3;
 
-import android.os.AsyncTask;
+import android.app.LoaderManager;
+import android.content.AsyncTaskLoader;
+import android.content.Loader;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +19,8 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int LOADER_ID = 1;
+
     static {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                 .detectActivityLeaks()
@@ -26,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private TextView text;
+
+    private Loader<String> loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,35 +48,43 @@ public class MainActivity extends AppCompatActivity {
                 loadFromUrl();
             }
         });
+
+        loader = getLoaderManager().initLoader(LOADER_ID, null,
+                new LoaderManager.LoaderCallbacks<String>() {
+            @Override
+            public Loader<String> onCreateLoader(int id, final Bundle args) {
+                return new AsyncTaskLoader<String>(MainActivity.this) {
+                    @Override
+                    public String loadInBackground() {
+                        try {
+                            return readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }
+                };
+            }
+
+            @Override
+            public void onLoadFinished(Loader<String> loader, String data) {
+                onTextLoaded(data);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<String> loader) {
+                Log.d("MainActivity", "OnLoaderReset");
+            }
+        });
     }
 
     private void loadFromUrl() {
-        new AsyncTask<String, Void, String>() {
-
-            @Override
-            protected void onPreExecute() {
-                text.setText("Loading...");
-            }
-
-            @Override
-            protected String doInBackground(String... params) {
-                try {
-                    return readStringFromUrl(params[0]);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                onTextLoaded(result);
-            }
-
-        }.execute("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+        loader.forceLoad();
     }
 
-    private void onTextLoaded(final String stringFromUrl) {
+    private void onTextLoaded(String stringFromUrl) {
+        if (stringFromUrl == null) {
+            stringFromUrl = "Data unavailable";
+        }
         Toast.makeText(MainActivity.this, stringFromUrl, Toast.LENGTH_SHORT).show();
         text.setText(stringFromUrl);
     }
