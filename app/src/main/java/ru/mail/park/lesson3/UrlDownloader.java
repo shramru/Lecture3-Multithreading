@@ -22,7 +22,7 @@ public class UrlDownloader {
         void onLoaded(String request, String value);
     }
 
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final Executor executor = Executors.newCachedThreadPool();
 
     private LruCache<String, String> cache = new LruCache<>(32);
 
