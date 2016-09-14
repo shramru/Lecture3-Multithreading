@@ -1,5 +1,6 @@
 package ru.mail.park.lesson3;
 
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
@@ -17,8 +18,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private TextView text;
 
@@ -39,27 +38,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadFromUrl() {
-        text.setText("Loading...");
+        new AsyncTask<String, Void, String>() {
 
-        new Thread() {
             @Override
-            public void run() {
-                final String stringFromUrl;
+            protected void onPreExecute() {
+                text.setText("Loading...");
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
                 try {
-                    stringFromUrl = readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+                    return readStringFromUrl(params[0]);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    return;
+                    return null;
                 }
-
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        onTextLoaded(stringFromUrl);
-                    }
-                });
             }
-        }.start();
+
+            @Override
+            protected void onPostExecute(String result) {
+                onTextLoaded(result);
+            }
+
+        }.execute("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
     }
 
     private void onTextLoaded(final String stringFromUrl) {
