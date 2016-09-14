@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class UrlDownloader {
 
@@ -19,6 +22,8 @@ public class UrlDownloader {
     public interface Callback {
         void onLoaded(String value);
     }
+
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     private String cachedResult;
 
@@ -34,24 +39,30 @@ public class UrlDownloader {
             return;
         }
 
-        new AsyncTask<String, Void, String>() {
+        executor.execute(new Runnable() {
             @Override
-            protected String doInBackground(String... params) {
+            public void run() {
+                String result;
                 try {
-                    return load(params[0]);
+                    result = load("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
                 } catch (IOException e) {
-                    return null;
+                    result = null;
                 }
+                notifyLoaded(result);
             }
+        });
+    }
 
+    private void notifyLoaded(final String result) {
+        Ui.run(new Runnable() {
             @Override
-            protected void onPostExecute(String content) {
-                cachedResult = content;
+            public void run() {
+                cachedResult = result;
                 if (callback != null) {
-                    callback.onLoaded(content);
+                    callback.onLoaded(result);
                 }
             }
-        }.execute("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+        });
     }
 
     private String load(String url) throws IOException {
