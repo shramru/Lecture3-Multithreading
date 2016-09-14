@@ -1,6 +1,6 @@
 package ru.mail.park.lesson3;
 
-import android.os.AsyncTask;
+import android.support.v4.util.LruCache;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UrlDownloader {
@@ -20,12 +19,12 @@ public class UrlDownloader {
     }
 
     public interface Callback {
-        void onLoaded(String value);
+        void onLoaded(String request, String value);
     }
 
     private final Executor executor = Executors.newSingleThreadExecutor();
 
-    private String cachedResult;
+    private LruCache<String, String> cache = new LruCache<>(32);
 
     private Callback callback;
 
@@ -33,9 +32,10 @@ public class UrlDownloader {
         this.callback = callback;
     }
 
-    public void load() {
+    public void load(final String url) {
+        String cachedResult = cache.get(url);
         if (cachedResult != null) {
-            callback.onLoaded(cachedResult);
+            callback.onLoaded(url, cachedResult);
             return;
         }
 
@@ -44,28 +44,30 @@ public class UrlDownloader {
             public void run() {
                 String result;
                 try {
-                    result = load("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+                    result = loadInternal(url);
                 } catch (IOException e) {
                     result = null;
                 }
-                notifyLoaded(result);
+                notifyLoaded(url, result);
             }
         });
     }
 
-    private void notifyLoaded(final String result) {
+    private void notifyLoaded(final String url, final String result) {
         Ui.run(new Runnable() {
             @Override
             public void run() {
-                cachedResult = result;
+                if (result != null) {
+                    cache.put(url, result);
+                }
                 if (callback != null) {
-                    callback.onLoaded(result);
+                    callback.onLoaded(url, result);
                 }
             }
         });
     }
 
-    private String load(String url) throws IOException {
+    private String loadInternal(String url) throws IOException {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
