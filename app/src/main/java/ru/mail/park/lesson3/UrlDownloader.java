@@ -10,6 +10,9 @@ import java.net.URL;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class UrlDownloader {
 
     private static final UrlDownloader DOWNLOADER = new UrlDownloader();
@@ -74,26 +77,17 @@ public class UrlDownloader {
             Thread.currentThread().interrupt();
         }
 
-        StringBuilder result = new StringBuilder();
+        Response response = Http.getClient().newCall(
+                new Request.Builder()
+                        .url(url)
+                        .build()
+        ).execute();
 
-        URL oracle = new URL(url);
-        InputStream in = oracle.openStream();
         try {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-
-            for (;;) {
-                String inputLine = bufferedReader.readLine();
-                if (inputLine == null) {
-                    break;
-                }
-
-                result.append(inputLine).append('\n');
-            }
+            return response.body().string();
         } finally {
-            in.close();
+            response.close();
         }
-
-        return result.toString();
     }
 
 }
