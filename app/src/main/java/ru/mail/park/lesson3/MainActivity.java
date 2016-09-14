@@ -2,6 +2,7 @@ package ru.mail.park.lesson3;
 
 import android.app.LoaderManager;
 import android.content.AsyncTaskLoader;
+import android.content.Context;
 import android.content.Loader;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -53,16 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 new LoaderManager.LoaderCallbacks<String>() {
             @Override
             public Loader<String> onCreateLoader(int id, final Bundle args) {
-                return new AsyncTaskLoader<String>(MainActivity.this) {
-                    @Override
-                    public String loadInBackground() {
-                        try {
-                            return readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }
-                };
+                return new UrlTaskLoader(MainActivity.this);
             }
 
             @Override
@@ -89,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         text.setText(stringFromUrl);
     }
 
-    private String readStringFromUrl(String url) throws IOException {
+    private static String readStringFromUrl(String url) throws IOException {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
@@ -118,4 +110,18 @@ public class MainActivity extends AppCompatActivity {
         return result.toString();
     }
 
+    private static class UrlTaskLoader extends AsyncTaskLoader<String> {
+        public UrlTaskLoader(Context context) {
+            super(context);
+        }
+
+        @Override
+        public String loadInBackground() {
+            try {
+                return readStringFromUrl("https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt");
+            } catch (IOException e) {
+                return null;
+            }
+        }
+    }
 }
