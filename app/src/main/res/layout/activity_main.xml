@@ -25,4 +25,10 @@
         android:background="#C9FDC3"
         android:padding="8dp"
         android:layout_margin="4dp" />
+
+    <Button
+        android:id="@+id/open_activity"
+        android:text="Start another activity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>
