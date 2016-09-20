@@ -1,7 +1,11 @@
 <resources>
     <string name="app_name">Lesson3</string>
+    <string name="clear_cache">Clear cache</string>
+    <string name="start_another_activity">Start another activity</string>
+    <string name="another_activity_text">This is another activity</string>
     <string name="click_me">Click me</string>
     <string name="loading">Loading…</string>
     <string name="data_unavailable">Data unavailable</string>
     <string name="unknown_url">Unknown url: </string>
+    <string name="cache_cleared">HTTP cache successfully cleared</string>
 </resources>

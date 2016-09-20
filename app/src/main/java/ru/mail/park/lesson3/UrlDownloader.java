@@ -2,13 +2,12 @@ package ru.mail.park.lesson3;
 
 import android.support.v4.util.LruCache;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.concurrent.Executor;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import okhttp3.Request;
 import okhttp3.Response;
@@ -25,9 +24,10 @@ public class UrlDownloader {
         void onLoaded(String request, String value);
     }
 
-    private final Executor executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ArrayList<Future> futures = new ArrayList<>();
 
-    private LruCache<String, String> cache = new LruCache<>(32);
+    private final LruCache<String, String> cache = new LruCache<>(32);
 
     private Callback callback;
 
@@ -36,30 +36,52 @@ public class UrlDownloader {
     }
 
     public void load(final String url) {
-        String cachedResult = cache.get(url);
+        final String cachedResult = cache.get(url);
         if (cachedResult != null) {
             callback.onLoaded(url, cachedResult);
             return;
         }
 
-        executor.execute(new Runnable() {
+        futures.add(executor.submit(new Runnable() {
             @Override
             public void run() {
                 String result;
                 try {
                     result = loadInternal(url);
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                     result = null;
+                } catch (InterruptedException ignored) {
+                    return;
                 }
                 notifyLoaded(url, result);
             }
-        });
+        }));
+    }
+
+    public void clearCache() {
+        cache.evictAll();
+    }
+
+    public void cancelAll() {
+        for (Future f : futures)
+            f.cancel(true);
+        futures.clear();
+    }
+
+    private void cleanupFutures() {
+        for (Iterator<Future> it = futures.iterator(); it.hasNext();) {
+            Future f = it.next();
+            if (f.isDone() || f.isCancelled())
+                it.remove();
+        }
     }
 
     private void notifyLoaded(final String url, final String result) {
         Ui.run(new Runnable() {
             @Override
             public void run() {
+                cleanupFutures();
+
                 if (result != null) {
                     cache.put(url, result);
                 }
@@ -70,12 +92,8 @@ public class UrlDownloader {
         });
     }
 
-    private String loadInternal(String url) throws IOException {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    private String loadInternal(String url) throws IOException, InterruptedException {
+        Thread.sleep(5000);
 
         Response response = Http.getClient().newCall(
                 new Request.Builder()

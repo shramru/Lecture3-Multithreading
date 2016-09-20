@@ -3,7 +3,7 @@ package ru.mail.park.lesson3;
 import android.os.Handler;
 import android.os.Looper;
 
-public class Ui {
+class Ui {
 
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 

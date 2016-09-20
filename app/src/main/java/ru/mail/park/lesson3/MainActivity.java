@@ -11,12 +11,8 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String PREFS_NAME = "MyPrefs";
-
     private static final String URL_1 = "https://gist.githubusercontent.com/anonymous/66e735b3894c5e534f2cf381c8e3165e/raw/8c16d9ec5de0632b2b5dc3e5c114d92f3128561a/gistfile1.txt";
     private static final String URL_2 = "https://gist.githubusercontent.com/anonymous/be76b41ddf012b761c15a56d92affeb6/raw/bb1d4f849cb79264b53a9760fe428bbe26851849/gistfile1.txt";
-    private static final String textKey1 = "text1";
-    private static final String textKey2 = "text2";
 
     static {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
@@ -30,14 +26,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView text1;
     private TextView text2;
 
-    SharedPreferences settings;
+    private SharedPreferences settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        settings = getSharedPreferences(PREFS_NAME, 0);
+        settings = getPreferences(MODE_PRIVATE);
 
         findViewById(R.id.open_activity).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,12 +41,19 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, AnotherActivity.class));
             }
         });
+        findViewById(R.id.clear_cache).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UrlDownloader.getInstance().clearCache();
+                Toast.makeText(getApplicationContext(), getString(R.string.cache_cleared), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         text1 = (TextView) findViewById(R.id.text1);
         text2 = (TextView) findViewById(R.id.text2);
 
-        text1.setText(getString(R.string.click_me));
-        text2.setText(getString(R.string.click_me));
+        text1.setText(getStringFromStorage(textKeyForTextView(text1), getString(R.string.click_me)));
+        text2.setText(getStringFromStorage(textKeyForTextView(text2), getString(R.string.click_me)));
 
         text1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
                 loadFromUrl(URL_1);
             }
         });
-
         text2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,14 +76,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void saveString(String key, String value) {
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString(key, value);
-        editor.apply();
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        saveStringToStorage(textKeyForTextView(text1), text1.getText().toString());
+        saveStringToStorage(textKeyForTextView(text2), text2.getText().toString());
     }
 
-    private String getString(String key) {
-        return settings.getString(key, null);
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        settings.edit().clear().apply();
+        UrlDownloader.getInstance().cancelAll();
+    }
+
+    private void saveStringToStorage(String key, String value) {
+        settings.edit().putString(key, value).apply();
+    }
+
+    private String getStringFromStorage(String key, String defValue) {
+        return settings.getString(key, defValue);
     }
 
     private void loadFromUrl(String url) {
@@ -95,10 +111,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Toast.makeText(getApplicationContext(), stringFromUrl, Toast.LENGTH_SHORT).show();
-        textViewForUrl(url).setText(stringFromUrl);
 
-        saveString(textKey1, text1.getText().toString());
-        saveString(textKey2, text2.getText().toString());
+        TextView textView = textViewForUrl(url);
+        textView.setText(stringFromUrl);
+
+        saveStringToStorage(textKeyForTextView(textView), stringFromUrl);
     }
 
     private TextView textViewForUrl(String url) {
@@ -110,17 +127,7 @@ public class MainActivity extends AppCompatActivity {
         throw new IllegalArgumentException(getString(R.string.unknown_url) + url);
     }
 
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        saveString(textKey1, text1.getText().toString());
-        saveString(textKey2, text2.getText().toString());
-    }
-
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        text1.setText(getString(textKey1));
-        text2.setText(getString(textKey2));
+    private String textKeyForTextView(TextView textView) {
+        return this.getResources().getResourceEntryName(textView.getId());
     }
 }
