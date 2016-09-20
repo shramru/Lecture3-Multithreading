@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
         text1 = (TextView) findViewById(R.id.text1);
         text2 = (TextView) findViewById(R.id.text2);
 
-        text1.setText(getStringFromStorage(textKeyForTextView(text1), getString(R.string.click_me)));
-        text2.setText(getStringFromStorage(textKeyForTextView(text2), getString(R.string.click_me)));
+        text1.setText(getString(R.string.click_me));
+        text2.setText(getString(R.string.click_me));
 
         text1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -82,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
 
         saveStringToStorage(textKeyForTextView(text1), text1.getText().toString());
         saveStringToStorage(textKeyForTextView(text2), text2.getText().toString());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        text1.setText(getStringFromStorage(textKeyForTextView(text1), getString(R.string.click_me)));
+        text2.setText(getStringFromStorage(textKeyForTextView(text2), getString(R.string.click_me)));
     }
 
     @Override
