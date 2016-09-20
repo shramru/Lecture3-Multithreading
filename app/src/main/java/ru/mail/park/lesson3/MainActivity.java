@@ -86,4 +86,16 @@ public class MainActivity extends AppCompatActivity {
         }
         throw new IllegalArgumentException("Unknown url: " + url);
     }
+
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putCharSequence("text1", text1.getText());
+        outState.putCharSequence("text2", text2.getText());
+    }
+
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        text1.setText(savedInstanceState.getCharSequence("text1"));
+        text2.setText(savedInstanceState.getCharSequence("text2"));
+    }
 }
