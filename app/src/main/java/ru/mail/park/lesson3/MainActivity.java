@@ -74,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
         if (stringFromUrl == null) {
             stringFromUrl = "Data unavailable";
         }
-        Toast.makeText(MainActivity.this, stringFromUrl, Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(getApplicationContext(), stringFromUrl, Toast.LENGTH_SHORT).show();
         textViewForUrl(url).setText(stringFromUrl);
     }
 
@@ -95,7 +96,10 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        text1.setText(savedInstanceState.getCharSequence("text1"));
-        text2.setText(savedInstanceState.getCharSequence("text2"));
+
+        if (savedInstanceState != null) {
+            text1.setText(savedInstanceState.getCharSequence("text1"));
+            text2.setText(savedInstanceState.getCharSequence("text2"));
+        }
     }
 }
