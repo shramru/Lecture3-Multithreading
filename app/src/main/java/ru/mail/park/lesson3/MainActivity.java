@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,18 +34,12 @@ public class MainActivity extends AppCompatActivity {
 
         settings = getPreferences(MODE_PRIVATE);
 
-        findViewById(R.id.open_activity).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, AnotherActivity.class));
-            }
-        });
-        findViewById(R.id.clear_cache).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UrlDownloader.getInstance().clearCache();
-                Toast.makeText(getApplicationContext(), getString(R.string.cache_cleared), Toast.LENGTH_SHORT).show();
-            }
+        findViewById(R.id.open_activity).setOnClickListener(
+                v -> startActivity(new Intent(MainActivity.this, AnotherActivity.class))
+        );
+        findViewById(R.id.clear_cache).setOnClickListener(v -> {
+            UrlDownloader.getInstance().clearCache();
+            Toast.makeText(getApplicationContext(), getString(R.string.cache_cleared), Toast.LENGTH_SHORT).show();
         });
 
         text1 = (TextView) findViewById(R.id.text1);
@@ -55,25 +48,10 @@ public class MainActivity extends AppCompatActivity {
         text1.setText(getString(R.string.click_me));
         text2.setText(getString(R.string.click_me));
 
-        text1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadFromUrl(URL_1);
-            }
-        });
-        text2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadFromUrl(URL_2);
-            }
-        });
+        text1.setOnClickListener(v -> loadFromUrl(URL_1));
+        text2.setOnClickListener(v -> loadFromUrl(URL_2));
 
-        UrlDownloader.getInstance().setCallback(new UrlDownloader.Callback() {
-            @Override
-            public void onLoaded(String key, String value) {
-                onTextLoaded(key, value);
-            }
-        });
+        UrlDownloader.getInstance().setCallback(this::onTextLoaded);
     }
 
     @Override

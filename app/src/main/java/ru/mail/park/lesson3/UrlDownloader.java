@@ -42,19 +42,16 @@ public class UrlDownloader {
             return;
         }
 
-        futures.add(executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                String result;
-                try {
-                    result = loadInternal(url);
-                } catch (IOException ignored) {
-                    result = null;
-                } catch (InterruptedException ignored) {
-                    return;
-                }
-                notifyLoaded(url, result);
+        futures.add(executor.submit(() -> {
+            String result;
+            try {
+                result = loadInternal(url);
+            } catch (IOException ignored) {
+                result = null;
+            } catch (InterruptedException ignored) {
+                return;
             }
+            notifyLoaded(url, result);
         }));
     }
 
@@ -77,17 +74,14 @@ public class UrlDownloader {
     }
 
     private void notifyLoaded(final String url, final String result) {
-        Ui.run(new Runnable() {
-            @Override
-            public void run() {
-                cleanupFutures();
+        Ui.run(() -> {
+            cleanupFutures();
 
-                if (result != null) {
-                    cache.put(url, result);
-                }
-                if (callback != null) {
-                    callback.onLoaded(url, result);
-                }
+            if (result != null) {
+                cache.put(url, result);
+            }
+            if (callback != null) {
+                callback.onLoaded(url, result);
             }
         });
     }
